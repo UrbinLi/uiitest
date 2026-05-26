@@ -1,0 +1,51 @@
+name: Web QA Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Public or controlled test application URL
+        required: true
+        type: string
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      QA_BASE_URL: ${{ inputs.base_url }}
+
+    steps:
+      - name: Checkout automation repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run deterministic smoke validation
+        run: pnpm qa:smoke
+
+      - name: Upload smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-qa-smoke-evidence
+          path: |
+            qa/evidence
+            qa/reports
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 30
