@@ -1,0 +1,12 @@
+node_modules
+playwright-report
+test-results
+midscene_run
+.env
+.DS_Store
+
+# Generated execution evidence; keep storage roots tracked.
+qa/evidence/*
+!qa/evidence/.gitkeep
+qa/reports/*
+!qa/reports/.gitkeep

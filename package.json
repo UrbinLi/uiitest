@@ -1,0 +1,20 @@
+{
+  "name": "allymatic-web-qa",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "qa:smoke": "bash qa/run-web-qa.sh smoke",
+    "qa:ai": "bash qa/run-web-qa.sh ai",
+    "qa:ai:codex": "bash qa/run-web-qa.sh ai-codex",
+    "test:list": "playwright test --list",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@midscene/web": "1.8.4",
+    "@playwright/test": "1.60.0",
+    "@types/node": "^22.13.1",
+    "typescript": "~5.7.2"
+  },
+  "packageManager": "pnpm@10.15.0"
+}

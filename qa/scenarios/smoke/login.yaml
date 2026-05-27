@@ -1,0 +1,23 @@
+id: WEB-SMOKE-001
+name: Public login page renders without browser errors
+module: web
+priority: P0
+suite: smoke
+target:
+  base_url_env: QA_BASE_URL
+route: /auth/login
+preconditions:
+  - The web application is accessible at QA_BASE_URL.
+  - No authenticated user state is required.
+steps:
+  - Open the public login route.
+  - Verify the app root and login action render.
+  - Capture a full-page screenshot and browser diagnostic logs.
+expected:
+  - The page visibly offers a login action.
+  - No console error or page error occurs during initial rendering.
+evidence:
+  - screenshot
+  - console_log
+  - page_error_log
+  - summary_markdown

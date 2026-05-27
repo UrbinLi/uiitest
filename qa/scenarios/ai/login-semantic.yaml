@@ -1,0 +1,28 @@
+id: WEB-AI-001
+name: Public login page communicates a usable login path
+module: web
+priority: P1
+suite: ai
+execution:
+  engine: midscene-playwright
+  command_local: QA_BASE_URL="<target>" pnpm qa:ai:codex
+target:
+  base_url_env: QA_BASE_URL
+route: /auth/login
+data_policy:
+  authenticated: false
+  production_customer_data: false
+  model_exposure: Visible page screenshot and visible login-page text are sent to the configured model.
+steps:
+  - Open the public login route.
+  - Verify a stable app root and login action through Playwright.
+  - Ask Midscene whether the page clearly offers a usable sign-in method.
+expected:
+  - A usable login method is visible and understandable.
+  - Browser diagnostic logs are retained for separate quality review.
+evidence:
+  - screenshot
+  - console_log
+  - page_error_log
+  - summary_markdown
+  - midscene_html_report
