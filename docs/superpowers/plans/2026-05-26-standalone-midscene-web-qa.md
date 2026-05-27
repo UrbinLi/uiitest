@@ -116,6 +116,8 @@ After verifying the standalone repository, switch `allymatic-fe` from the unpush
 
 Run syntax checks, test discovery, Midscene validation, and inspect evidence before committing the standalone repository.
 
-- [ ] **Step 3: Prepare GitHub publishing**
+- [x] **Step 3: Prepare GitHub publishing**
 
 After the user authenticates `gh` and identifies the target GitHub owner/repository, push the standalone repository and create a draft pull request or new private repository as appropriate.
+
+Observed: Published `main` and `codex/standalone-midscene-web-qa` to `UrbinLi/uiitest` and opened draft PR `https://github.com/UrbinLi/uiitest/pull/1`.
