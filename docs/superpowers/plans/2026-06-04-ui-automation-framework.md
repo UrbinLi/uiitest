@@ -68,7 +68,7 @@ Expected: `package.json` and `pnpm-lock.yaml` include `tsx` as a dev dependency.
 
 - [ ] **Step 2: Update package scripts**
 
-Modify `package.json` scripts to include these entries while keeping existing scripts:
+Modify `package.json` scripts to include these entries while keeping existing scripts. Defer the framework runner script to Task 9, after `qa/run-framework-qa.sh` exists.
 
 ```json
 {
@@ -76,7 +76,6 @@ Modify `package.json` scripts to include these entries while keeping existing sc
     "qa:smoke": "bash qa/run-web-qa.sh smoke",
     "qa:ai": "bash qa/run-web-qa.sh ai",
     "qa:ai:codex": "bash qa/run-web-qa.sh ai-codex",
-    "qa:framework": "bash qa/run-framework-qa.sh",
     "test:unit": "tsx --test tests/**/*.test.ts",
     "test:list": "playwright test --list",
     "typecheck": "tsc --noEmit"
