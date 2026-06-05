@@ -4,6 +4,8 @@ import type { Page } from "@playwright/test";
 
 export type StepStatus = "passed" | "failed" | "blocked" | "skipped";
 
+const EVIDENCE_PATH_SEGMENT_PATTERN = /^[A-Za-z0-9._-]+$/;
+
 export interface EvidenceRecorder {
   caseEvidenceDir: string;
   step(name: string, status: StepStatus, detail?: string): Promise<void>;
@@ -22,6 +24,8 @@ export async function createEvidenceRecorder({
   evidenceRoot,
   caseId,
 }: CreateEvidenceRecorderInput): Promise<EvidenceRecorder> {
+  assertValidEvidencePathSegment(caseId);
+
   const caseEvidenceDir = join(evidenceRoot, caseId);
   const stepsPath = join(caseEvidenceDir, "steps.jsonl");
   const consoleErrorsPath = join(caseEvidenceDir, "console-errors.log");
@@ -57,6 +61,8 @@ export async function createEvidenceRecorder({
       await appendFile(pageErrorsPath, `${formatLogMessage(message)}\n`);
     },
     async screenshot(page, name) {
+      assertValidEvidencePathSegment(name);
+
       const screenshotPath = join(caseEvidenceDir, `${name}.png`);
 
       await page.screenshot({ path: screenshotPath, fullPage: true });
@@ -67,6 +73,17 @@ export async function createEvidenceRecorder({
       await appendStep("finish evidence recording", "passed");
     },
   };
+}
+
+function assertValidEvidencePathSegment(segment: string): void {
+  if (
+    segment === "" ||
+    segment === "." ||
+    segment === ".." ||
+    !EVIDENCE_PATH_SEGMENT_PATTERN.test(segment)
+  ) {
+    throw new Error(`Invalid evidence path segment: ${segment}`);
+  }
 }
 
 function formatLogMessage(message: string): string {

@@ -55,6 +55,18 @@ describe("evidence recorder", () => {
     assert.match(pageErrors, /Page crashed/);
   });
 
+  it("rejects invalid case IDs before creating evidence paths", async () => {
+    const evidenceRoot = await mkdtemp(join(tmpdir(), "midscene-evidence-"));
+    const invalidCaseIds = ["../outside", "foo/bar", ".", ""];
+
+    for (const caseId of invalidCaseIds) {
+      await assert.rejects(
+        () => createEvidenceRecorder({ evidenceRoot, caseId }),
+        /Invalid evidence path segment/,
+      );
+    }
+  });
+
   it("captures full-page screenshots", async () => {
     const evidenceRoot = await mkdtemp(join(tmpdir(), "midscene-evidence-"));
     const caseId = "CONTENT-READ-001";
@@ -71,5 +83,27 @@ describe("evidence recorder", () => {
 
     assert.equal(screenshotPath, join(recorder.caseEvidenceDir, "content-page.png"));
     assert.deepEqual(screenshotCalls, [{ path: screenshotPath, fullPage: true }]);
+  });
+
+  it("rejects invalid screenshot names before writing screenshots", async () => {
+    const evidenceRoot = await mkdtemp(join(tmpdir(), "midscene-evidence-"));
+    const recorder = await createEvidenceRecorder({
+      evidenceRoot,
+      caseId: "CONTENT-READ-001",
+    });
+    const invalidScreenshotNames = ["../outside", "foo/bar", ".."];
+    const screenshotCalls: unknown[] = [];
+    const page = {
+      async screenshot(options: unknown) {
+        screenshotCalls.push(options);
+        return Buffer.from("");
+      },
+    } as unknown as Page;
+
+    for (const name of invalidScreenshotNames) {
+      await assert.rejects(() => recorder.screenshot(page, name), /Invalid evidence path segment/);
+    }
+
+    assert.deepEqual(screenshotCalls, []);
   });
 });
