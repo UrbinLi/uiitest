@@ -7,10 +7,16 @@ export type FeishuClientConfig = {
   baseUrl?: string;
 };
 
-type FeishuListRecordsResponse = {
-  data?: {
-    items?: FeishuRecord[];
-  };
+type FeishuApiEnvelope<TData> = {
+  code?: number;
+  msg?: string;
+  data?: TData;
+};
+
+type FeishuListRecordsData = {
+  has_more?: boolean;
+  page_token?: string;
+  items?: FeishuRecord[];
 };
 
 export class FeishuClient {
@@ -27,44 +33,43 @@ export class FeishuClient {
   }
 
   async listRecords(viewId?: string): Promise<FeishuRecord[]> {
-    const url = this.buildRecordsUrl();
-    if (viewId !== undefined) {
-      url.searchParams.set("view_id", viewId);
-    }
+    const records: FeishuRecord[] = [];
+    let pageToken: string | undefined;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${this.bearerToken}`,
-      },
-    });
+    do {
+      const url = this.buildRecordsUrl();
+      url.searchParams.set("page_size", "500");
+      if (viewId !== undefined) {
+        url.searchParams.set("view_id", viewId);
+      }
+      if (pageToken !== undefined) {
+        url.searchParams.set("page_token", pageToken);
+      }
 
-    const bodyText = await response.text();
-    if (!response.ok) {
-      throw new Error(`Feishu listRecords failed with status ${response.status}: ${bodyText}`);
-    }
+      const body = await this.requestJson<FeishuListRecordsData>("listRecords", url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.bearerToken}`,
+        },
+      });
+      const data = body.data;
 
-    const body = parseJsonBody(bodyText) as FeishuListRecordsResponse;
-    return body.data?.items || [];
+      records.push(...(data?.items ?? []));
+      pageToken = data?.has_more === true ? data.page_token : undefined;
+    } while (pageToken !== undefined);
+
+    return records;
   }
 
   async updateRecord(recordId: string, fields: Record<string, unknown>): Promise<void> {
-    const response = await fetch(
-      `${this.buildRecordsUrl().toString()}/${encodeURIComponent(recordId)}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${this.bearerToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ fields }),
+    await this.requestJson("updateRecord", `${this.buildRecordsUrl()}/${encodeURIComponent(recordId)}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${this.bearerToken}`,
+        "Content-Type": "application/json",
       },
-    );
-
-    const bodyText = await response.text();
-    if (!response.ok) {
-      throw new Error(`Feishu updateRecord failed with status ${response.status}: ${bodyText}`);
-    }
+      body: JSON.stringify({ fields }),
+    });
   }
 
   private buildRecordsUrl(): URL {
@@ -78,6 +83,22 @@ export class FeishuClient {
   private normalizedBaseUrl(): string {
     return this.baseUrl.replace(/\/+$/, "");
   }
+
+  private async requestJson<TData>(
+    operation: "listRecords" | "updateRecord",
+    input: RequestInfo | URL,
+    init: RequestInit,
+  ): Promise<FeishuApiEnvelope<TData>> {
+    const response = await fetch(input, init);
+    const bodyText = await response.text();
+    if (!response.ok) {
+      throw new Error(`Feishu ${operation} failed with status ${response.status}: ${bodyText}`);
+    }
+
+    const body = parseJsonBody(bodyText) as FeishuApiEnvelope<TData>;
+    assertFeishuSuccess(operation, body);
+    return body;
+  }
 }
 
 export function createFeishuClient(config: FeishuClientConfig): FeishuClient {
@@ -90,4 +111,13 @@ function parseJsonBody(bodyText: string): unknown {
   }
 
   return JSON.parse(bodyText) as unknown;
+}
+
+function assertFeishuSuccess<TData>(
+  operation: "listRecords" | "updateRecord",
+  body: FeishuApiEnvelope<TData>,
+): void {
+  if (body.code !== undefined && body.code !== 0) {
+    throw new Error(`Feishu ${operation} failed with code ${body.code}: ${body.msg ?? ""}`);
+  }
 }
