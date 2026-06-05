@@ -8,7 +8,7 @@ export interface EvidenceRecorder {
   caseEvidenceDir: string;
   step(name: string, status: StepStatus, detail?: string): Promise<void>;
   consoleError(message: string): Promise<void>;
-  pageError(message: string | Error): Promise<void>;
+  pageError(message: string): Promise<void>;
   screenshot(page: Page, name: string): Promise<string>;
   finish(): Promise<void>;
 }
@@ -69,8 +69,6 @@ export async function createEvidenceRecorder({
   };
 }
 
-function formatLogMessage(message: string | Error): string {
-  const value = message instanceof Error ? message.stack ?? message.message : message;
-
-  return value.replace(/\r?\n/g, "\\n");
+function formatLogMessage(message: string): string {
+  return message.replace(/\r?\n/g, "\\n");
 }
