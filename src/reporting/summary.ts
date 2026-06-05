@@ -105,7 +105,7 @@ function renderMarkdown(summary: RunSummary): string {
     "",
   ];
 
-  return `${lines.join("\n")}\n`;
+  return lines.join("\n");
 }
 
 function renderResultRow(result: CaseResult): string {

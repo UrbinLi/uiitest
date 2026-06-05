@@ -10,7 +10,7 @@ export interface EvidenceRecorder {
   consoleError(message: string): Promise<void>;
   pageError(message: string | Error): Promise<void>;
   screenshot(page: Page, name: string): Promise<string>;
-  finish(status?: StepStatus, detail?: string): Promise<void>;
+  finish(): Promise<void>;
 }
 
 interface CreateEvidenceRecorderInput {
@@ -63,8 +63,8 @@ export async function createEvidenceRecorder({
 
       return screenshotPath;
     },
-    async finish(status = "passed", detail) {
-      await appendStep("finish evidence recording", status, detail);
+    async finish() {
+      await appendStep("finish evidence recording", "passed");
     },
   };
 }

@@ -36,21 +36,25 @@ describe("run summary reporting", () => {
 
     const summary = JSON.parse(await readFile(paths.jsonPath, "utf8"));
     const markdown = await readFile(paths.markdownPath, "utf8");
+    const expectedMarkdown = [
+      "# UI Automation Run Summary",
+      "",
+      "- Run ID: run-2026-06-05",
+      "- Passed: 1",
+      "- Failed: 0",
+      "- Blocked: 0",
+      "- Skipped: 0",
+      "- Partial: 0",
+      "- Feishu writeback: disabled",
+      "",
+      "| Case ID | Module | Status | Evidence | Failure |",
+      "| --- | --- | --- | --- | --- |",
+      "| CONTENT-READ-001 | content-management | passed | /tmp/evidence/CONTENT-READ-001 |  |",
+      "",
+    ].join("\n");
 
     assert.equal(summary.counts.passed, 1);
-    assert.match(markdown, /^# UI Automation Run Summary$/m);
-    assert.match(markdown, /^- Run ID: run-2026-06-05$/m);
-    assert.match(markdown, /^- Passed: 1$/m);
-    assert.match(markdown, /^- Failed: 0$/m);
-    assert.match(markdown, /^- Blocked: 0$/m);
-    assert.match(markdown, /^- Skipped: 0$/m);
-    assert.match(markdown, /^- Partial: 0$/m);
-    assert.match(markdown, /^- Feishu writeback: disabled$/m);
-    assert.match(markdown, /^\| Case ID \| Module \| Status \| Evidence \| Failure \|$/m);
-    assert.match(
-      markdown,
-      /^\| CONTENT-READ-001 \| content-management \| passed \| \/tmp\/evidence\/CONTENT-READ-001 \|  \|$/m,
-    );
+    assert.equal(markdown, expectedMarkdown);
   });
 
   it("escapes pipe characters in failure text in Markdown result tables", async () => {

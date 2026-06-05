@@ -6,6 +6,16 @@ import { describe, it } from "node:test";
 import type { Page } from "@playwright/test";
 
 import { createEvidenceRecorder } from "../../src/evidence/recorder.js";
+import type { EvidenceRecorder } from "../../src/evidence/recorder.js";
+
+type FinishParameters = Parameters<EvidenceRecorder["finish"]>;
+type FinishAcceptsNoArgumentsOnly = FinishParameters extends []
+  ? [] extends FinishParameters
+    ? true
+    : false
+  : false;
+
+const finishAcceptsNoArgumentsOnly: FinishAcceptsNoArgumentsOnly = true;
 
 describe("evidence recorder", () => {
   it("creates a case evidence directory and writes evidence logs", async () => {
@@ -14,6 +24,8 @@ describe("evidence recorder", () => {
 
     const recorder = await createEvidenceRecorder({ evidenceRoot, caseId });
 
+    assert.equal(finishAcceptsNoArgumentsOnly, true);
+
     const directory = await stat(join(evidenceRoot, caseId));
     assert.equal(directory.isDirectory(), true);
     assert.equal(recorder.caseEvidenceDir, join(evidenceRoot, caseId));
@@ -21,7 +33,7 @@ describe("evidence recorder", () => {
     await recorder.step("Open content page", "passed", "Loaded /content");
     await recorder.consoleError("TypeError: Cannot read property 'map' of undefined");
     await recorder.pageError("Page crashed while rendering content");
-    await recorder.finish("passed");
+    await recorder.finish();
 
     const steps = await readFile(join(recorder.caseEvidenceDir, "steps.jsonl"), "utf8");
     const consoleErrors = await readFile(
@@ -30,8 +42,15 @@ describe("evidence recorder", () => {
     );
     const pageErrors = await readFile(join(recorder.caseEvidenceDir, "page-errors.log"), "utf8");
 
+    const stepEntries = steps
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    const finishEntry = stepEntries.at(-1);
+
     assert.match(steps, /Open content page/);
-    assert.match(steps, /"name":"finish evidence recording"/);
+    assert.equal(finishEntry.name, "finish evidence recording");
+    assert.equal(finishEntry.status, "passed");
     assert.match(consoleErrors, /Cannot read property 'map'/);
     assert.match(pageErrors, /Page crashed/);
   });
