@@ -3,6 +3,8 @@ import { join } from "node:path";
 
 import type { CaseSnapshot, StandardCase } from "./types.js";
 
+const RUN_ID_PATTERN = /^\d{8}-\d{6}$/;
+
 export function createRunId(now = new Date()): string {
   const year = now.getUTCFullYear();
   const month = padDatePart(now.getUTCMonth() + 1);
@@ -22,6 +24,10 @@ export async function writeSnapshot(input: {
   filters: CaseSnapshot["filters"];
   cases: StandardCase[];
 }): Promise<string> {
+  if (!RUN_ID_PATTERN.test(input.runId)) {
+    throw new Error(`Invalid run ID: ${input.runId}`);
+  }
+
   const snapshotDir = join(input.rootDir, "cases", "snapshots", input.runId);
   const snapshotPath = join(snapshotDir, "cases.json");
   const snapshot: CaseSnapshot = {

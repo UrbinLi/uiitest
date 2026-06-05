@@ -75,4 +75,26 @@ describe("case snapshots", () => {
   it("creates UTC run IDs as YYYYMMDD-HHMMSS", () => {
     assert.equal(createRunId(new Date("2026-06-04T04:05:06Z")), "20260604-040506");
   });
+
+  it("rejects invalid run IDs before writing snapshots", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "midscene-snapshot-"));
+
+    try {
+      for (const runId of ["../escaped", "", "2026-06-04T04:05:06Z"]) {
+        await assert.rejects(
+          writeSnapshot({
+            rootDir,
+            runId,
+            source: "local",
+            sourceRef: "cases/examples/content-readonly.case.json",
+            filters: {},
+            cases: [completeCase],
+          }),
+          /Invalid run ID/,
+        );
+      }
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
 });
