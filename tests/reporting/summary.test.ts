@@ -38,6 +38,8 @@ describe("run summary reporting", () => {
     const markdown = await readFile(paths.markdownPath, "utf8");
 
     assert.equal(summary.counts.passed, 1);
+    assert.match(markdown, /\| passed \| 1 \|/);
+    assert.match(markdown, /\| failed \| 0 \|/);
     assert.match(markdown, /CONTENT-READ-001/);
   });
 
