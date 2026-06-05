@@ -60,6 +60,7 @@ export function validateCaseRecord(raw: unknown): CaseValidationResult {
   validateStringArray(raw, "env_scope", "envScope", errors);
   validateStringArray(raw, "tags", "tags", errors);
   validateStringArray(raw, "preconditions", "preconditions", errors);
+  validateCaseAssertions(raw, errors);
   validateSteps(raw, errors);
 
   return errors.length === 0 ? { valid: true, errors: [] } : { valid: false, errors };
@@ -87,6 +88,8 @@ export function normalizeCaseRecord(raw: unknown): StandardCase {
     dataProfile: getString(record, "data_profile", "dataProfile"),
     owner: getString(record, "owner", "owner"),
     preconditions: getStringArray(record, "preconditions", "preconditions"),
+    hardAssertions: getHardAssertions(record).map(normalizeHardAssertion),
+    aiAssertions: getAiAssertions(record).map(normalizeAiAssertion),
     steps: getSteps(record).map(normalizeStep),
   };
 
@@ -121,42 +124,35 @@ function validateSteps(record: UnknownRecord, errors: string[]): void {
     if (typeof stepType !== "string" || !STEP_TYPES.has(stepType as StepType)) {
       errors.push(`steps[${index}].type must be one of ${Array.from(STEP_TYPES).join(", ")}`);
     }
-
-    validateAssertions(step, index, errors);
   });
 }
 
-function validateAssertions(step: UnknownRecord, stepIndex: number, errors: string[]): void {
-  const hardAssertions = getOptionalValue(step, "hard_assertions", "hardAssertions");
-  if (hardAssertions !== undefined) {
-    if (!Array.isArray(hardAssertions)) {
-      errors.push(`steps[${stepIndex}].hard_assertions must be an array`);
-    } else {
-      hardAssertions.forEach((assertion, assertionIndex) => {
-        validateHardAssertion(assertion, stepIndex, assertionIndex, errors);
-      });
-    }
+function validateCaseAssertions(record: UnknownRecord, errors: string[]): void {
+  const hardAssertions = getValue(record, "hard_assertions", "hardAssertions");
+  if (!Array.isArray(hardAssertions)) {
+    errors.push("hard_assertions must be an array");
+  } else {
+    hardAssertions.forEach((assertion, assertionIndex) => {
+      validateHardAssertion(assertion, assertionIndex, errors);
+    });
   }
 
-  const aiAssertions = getOptionalValue(step, "ai_assertions", "aiAssertions");
-  if (aiAssertions !== undefined) {
-    if (!Array.isArray(aiAssertions)) {
-      errors.push(`steps[${stepIndex}].ai_assertions must be an array`);
-    } else {
-      aiAssertions.forEach((assertion, assertionIndex) => {
-        validateAiAssertion(assertion, stepIndex, assertionIndex, errors);
-      });
-    }
+  const aiAssertions = getValue(record, "ai_assertions", "aiAssertions");
+  if (!Array.isArray(aiAssertions)) {
+    errors.push("ai_assertions must be an array");
+  } else {
+    aiAssertions.forEach((assertion, assertionIndex) => {
+      validateAiAssertion(assertion, assertionIndex, errors);
+    });
   }
 }
 
 function validateHardAssertion(
   assertion: unknown,
-  stepIndex: number,
   assertionIndex: number,
   errors: string[],
 ): void {
-  const path = `steps[${stepIndex}].hard_assertions[${assertionIndex}]`;
+  const path = `hard_assertions[${assertionIndex}]`;
 
   if (!isRecord(assertion)) {
     errors.push(`${path} must be an object`);
@@ -169,6 +165,20 @@ function validateHardAssertion(
     !HARD_ASSERTION_TYPES.has(assertionType as HardAssertionType)
   ) {
     errors.push(`${path}.type must be one of ${Array.from(HARD_ASSERTION_TYPES).join(", ")}`);
+  } else {
+    switch (assertionType) {
+      case "url_contains":
+      case "text_visible":
+        validateStringProperty(assertion, "expected", path, errors);
+        break;
+      case "locator_visible":
+        validateStringProperty(assertion, "target", path, errors);
+        break;
+      case "locator_count":
+        validateStringProperty(assertion, "target", path, errors);
+        validateNumberProperty(assertion, "expected", path, errors);
+        break;
+    }
   }
 
   validateOptionalRequired(assertion, path, errors);
@@ -176,11 +186,10 @@ function validateHardAssertion(
 
 function validateAiAssertion(
   assertion: unknown,
-  stepIndex: number,
   assertionIndex: number,
   errors: string[],
 ): void {
-  const path = `steps[${stepIndex}].ai_assertions[${assertionIndex}]`;
+  const path = `ai_assertions[${assertionIndex}]`;
 
   if (!isRecord(assertion)) {
     errors.push(`${path} must be an object`);
@@ -209,20 +218,12 @@ function normalizeStep(step: unknown): StandardCaseStep {
   copyOptionalString(record, standardStep, "description", "description", "description");
   copyOptionalString(record, standardStep, "target", "target", "target");
   copyOptionalString(record, standardStep, "input", "input", "input");
+  copyOptionalString(record, standardStep, "value", "value", "value");
+  copyOptionalString(record, standardStep, "note", "note", "note");
 
   const timeoutMs = getOptionalValue(record, "timeout_ms", "timeoutMs");
   if (typeof timeoutMs === "number") {
     standardStep.timeoutMs = timeoutMs;
-  }
-
-  const hardAssertions = getOptionalValue(record, "hard_assertions", "hardAssertions");
-  if (Array.isArray(hardAssertions)) {
-    standardStep.hardAssertions = hardAssertions.map(normalizeHardAssertion);
-  }
-
-  const aiAssertions = getOptionalValue(record, "ai_assertions", "aiAssertions");
-  if (Array.isArray(aiAssertions)) {
-    standardStep.aiAssertions = aiAssertions.map(normalizeAiAssertion);
   }
 
   const metadata = getOptionalValue(record, "metadata", "metadata");
@@ -235,20 +236,33 @@ function normalizeStep(step: unknown): StandardCaseStep {
 
 function normalizeHardAssertion(assertion: unknown): HardAssertion {
   const record = assertion as UnknownRecord;
-  const standardAssertion: HardAssertion = {
-    type: getValue(record, "type", "type") as HardAssertionType,
-    required: getValue(record, "required", "required") === false ? false : true,
-  };
+  const type = getValue(record, "type", "type") as HardAssertionType;
+  const required = getValue(record, "required", "required") === false ? false : true;
 
-  const expected = getOptionalValue(record, "expected", "expected");
-  if (expected !== undefined) {
-    standardAssertion.expected = expected as string | number | boolean;
+  switch (type) {
+    case "url_contains":
+    case "text_visible":
+      return {
+        type,
+        expected: getString(record, "expected", "expected"),
+        required,
+      };
+    case "locator_visible":
+      return {
+        type,
+        target: getString(record, "target", "target"),
+        required,
+      };
+    case "locator_count":
+      return {
+        type,
+        target: getString(record, "target", "target"),
+        expected: getValue(record, "expected", "expected") as number,
+        required,
+      };
   }
 
-  copyOptionalString(record, standardAssertion, "locator", "locator", "locator");
-  copyOptionalString(record, standardAssertion, "note", "note", "note");
-
-  return standardAssertion;
+  throw new Error(`Invalid hard assertion type: ${String(type)}`);
 }
 
 function normalizeAiAssertion(assertion: unknown): AiAssertion {
@@ -257,8 +271,6 @@ function normalizeAiAssertion(assertion: unknown): AiAssertion {
     prompt: getString(record, "prompt", "prompt"),
     required: getValue(record, "required", "required") === false ? false : true,
   };
-
-  copyOptionalString(record, standardAssertion, "note", "note", "note");
 
   return standardAssertion;
 }
@@ -311,6 +323,29 @@ function validateStringArray(
   }
 }
 
+function validateStringProperty(
+  record: UnknownRecord,
+  key: string,
+  path: string,
+  errors: string[],
+): void {
+  if (typeof getValue(record, key, key) !== "string") {
+    errors.push(`${path}.${key} must be a string`);
+  }
+}
+
+function validateNumberProperty(
+  record: UnknownRecord,
+  key: string,
+  path: string,
+  errors: string[],
+): void {
+  const value = getValue(record, key, key);
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    errors.push(`${path}.${key} must be a number`);
+  }
+}
+
 function validateOptionalRequired(record: UnknownRecord, path: string, errors: string[]): void {
   const required = getOptionalValue(record, "required", "required");
   if (required !== undefined && typeof required !== "boolean") {
@@ -320,6 +355,14 @@ function validateOptionalRequired(record: UnknownRecord, path: string, errors: s
 
 function getSteps(record: UnknownRecord): unknown[] {
   return getValue(record, "steps", "steps") as unknown[];
+}
+
+function getHardAssertions(record: UnknownRecord): unknown[] {
+  return getValue(record, "hard_assertions", "hardAssertions") as unknown[];
+}
+
+function getAiAssertions(record: UnknownRecord): unknown[] {
+  return getValue(record, "ai_assertions", "aiAssertions") as unknown[];
 }
 
 function getString(record: UnknownRecord, snakeKey: string, camelKey: string): string {

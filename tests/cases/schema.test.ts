@@ -17,23 +17,23 @@ const readonlyCase = {
   data_profile: "seeded-content",
   owner: "qa",
   preconditions: ["User is signed in"],
+  hard_assertions: [
+    {
+      type: "url_contains",
+      expected: "/content",
+    },
+  ],
+  ai_assertions: [
+    {
+      prompt: "Confirm that the content page heading is visible.",
+    },
+  ],
   steps: [
     {
       step_id: "open-content",
       type: "goto",
       description: "Open the content page",
       target: "/content",
-      hard_assertions: [
-        {
-          type: "url_contains",
-          expected: "/content",
-        },
-      ],
-      ai_assertions: [
-        {
-          prompt: "Confirm that the content page heading is visible.",
-        },
-      ],
     },
   ],
 };
@@ -46,8 +46,8 @@ describe("case schema", () => {
     assert.equal(normalized.safetyLevel, "readonly");
     assert.deepEqual(normalized.tags, ["content", "readonly"]);
     assert.equal(normalized.steps[0].stepId, "open-content");
-    assert.equal(normalized.steps[0].hardAssertions?.[0].required, true);
-    assert.equal(normalized.steps[0].aiAssertions?.[0].required, true);
+    assert.equal(normalized.hardAssertions[0].required, true);
+    assert.equal(normalized.aiAssertions[0].required, true);
   });
 
   it("rejects a case with empty steps", () => {
@@ -58,5 +58,24 @@ describe("case schema", () => {
 
     assert.equal(validation.valid, false);
     assert.ok(validation.errors.includes("steps must contain at least one step"));
+  });
+
+  it("rejects locator_count hard assertions with non-numeric expected values", () => {
+    const validation = validateCaseRecord({
+      ...readonlyCase,
+      hard_assertions: [
+        {
+          type: "locator_count",
+          target: ".row",
+          expected: "2",
+        },
+      ],
+    });
+
+    assert.equal(validation.valid, false);
+    assert.ok(
+      validation.errors.includes("hard_assertions[0].expected must be a number"),
+      validation.errors.join("; "),
+    );
   });
 });

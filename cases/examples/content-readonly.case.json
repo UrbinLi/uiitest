@@ -16,44 +16,40 @@
       "Tester is signed in with readonly access.",
       "At least one published EaseNest content item exists."
     ],
+    "hard_assertions": [
+      {
+        "type": "url_contains",
+        "expected": "/content-management"
+      },
+      {
+        "type": "text_visible",
+        "expected": "EaseNest"
+      },
+      {
+        "type": "locator_visible",
+        "target": "text=EaseNest"
+      }
+    ],
+    "ai_assertions": [
+      {
+        "prompt": "Confirm the page shows the EaseNest content management list."
+      },
+      {
+        "prompt": "Confirm the detail view is readable and no save or delete action is triggered."
+      }
+    ],
     "steps": [
       {
         "step_id": "open-content-management",
         "type": "goto",
         "description": "Open the content management page.",
-        "target": "/content-management",
-        "hard_assertions": [
-          {
-            "type": "url_contains",
-            "expected": "/content-management"
-          },
-          {
-            "type": "text_visible",
-            "expected": "EaseNest"
-          }
-        ],
-        "ai_assertions": [
-          {
-            "prompt": "Confirm the page shows the EaseNest content management list."
-          }
-        ]
+        "target": "/content-management"
       },
       {
         "step_id": "open-first-content-detail",
         "type": "click",
         "description": "Open the first EaseNest content item without editing it.",
-        "target": "text=EaseNest",
-        "hard_assertions": [
-          {
-            "type": "locator_visible",
-            "locator": "text=EaseNest"
-          }
-        ],
-        "ai_assertions": [
-          {
-            "prompt": "Confirm the detail view is readable and no save or delete action is triggered."
-          }
-        ]
+        "target": "text=EaseNest"
       }
     ]
   }

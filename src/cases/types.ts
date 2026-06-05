@@ -22,18 +22,15 @@ export type HardAssertionType =
   | "locator_visible"
   | "locator_count";
 
-export interface HardAssertion {
-  type: HardAssertionType;
-  required: boolean;
-  expected?: string | number | boolean;
-  locator?: string;
-  note?: string;
-}
+export type HardAssertion =
+  | { type: "url_contains"; expected: string; required?: boolean }
+  | { type: "text_visible"; expected: string; required?: boolean }
+  | { type: "locator_visible"; target: string; required?: boolean }
+  | { type: "locator_count"; target: string; expected: number; required?: boolean };
 
 export interface AiAssertion {
   prompt: string;
   required: boolean;
-  note?: string;
 }
 
 export interface StandardCaseStep {
@@ -42,9 +39,9 @@ export interface StandardCaseStep {
   description?: string;
   target?: string;
   input?: string;
+  value?: string;
+  note?: string;
   timeoutMs?: number;
-  hardAssertions?: HardAssertion[];
-  aiAssertions?: AiAssertion[];
   metadata?: Record<string, unknown>;
 }
 
@@ -62,24 +59,30 @@ export interface StandardCase {
   dataProfile: string;
   owner: string;
   preconditions: string[];
+  hardAssertions: HardAssertion[];
+  aiAssertions: AiAssertion[];
   steps: StandardCaseStep[];
   feishuRecordId?: string;
 }
 
 export interface CaseSnapshot {
-  caseId: string;
-  capturedAt: string;
-  label: string;
-  data: Record<string, unknown>;
+  runId: string;
+  createdAt: string;
+  source: "local" | "feishu";
+  sourceRef: string;
+  filters: Record<string, unknown>;
+  cases: StandardCase[];
 }
 
 export interface CaseResult {
   caseId: string;
-  status: CaseStatus;
-  startedAt?: string;
-  finishedAt?: string;
-  durationMs?: number;
-  snapshots?: CaseSnapshot[];
-  errors?: string[];
   feishuRecordId?: string;
+  module: string;
+  title: string;
+  status: CaseStatus;
+  durationMs: number;
+  failure?: string;
+  evidenceDir: string;
+  startedAt: string;
+  finishedAt: string;
 }

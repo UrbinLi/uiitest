@@ -26,6 +26,8 @@
         "data_profile",
         "owner",
         "preconditions",
+        "hard_assertions",
+        "ai_assertions",
         "steps"
       ],
       "properties": {
@@ -89,6 +91,18 @@
         "feishu_record_id": {
           "type": "string"
         },
+        "hard_assertions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hardAssertion"
+          }
+        },
+        "ai_assertions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/aiAssertion"
+          }
+        },
         "steps": {
           "type": "array",
           "minItems": 1,
@@ -128,49 +142,94 @@
         "input": {
           "type": "string"
         },
+        "value": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
         "timeout_ms": {
           "type": "number"
         },
         "metadata": {
           "type": "object"
-        },
-        "hard_assertions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/hardAssertion"
-          }
-        },
-        "ai_assertions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/aiAssertion"
-          }
         }
       }
     },
     "hardAssertion": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["url_contains", "text_visible", "locator_visible", "locator_count"]
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["type", "expected"],
+          "properties": {
+            "type": {
+              "const": "url_contains"
+            },
+            "expected": {
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         },
-        "expected": {
-          "type": ["string", "number", "boolean"]
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["type", "expected"],
+          "properties": {
+            "type": {
+              "const": "text_visible"
+            },
+            "expected": {
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         },
-        "locator": {
-          "type": "string"
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["type", "target"],
+          "properties": {
+            "type": {
+              "const": "locator_visible"
+            },
+            "target": {
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         },
-        "required": {
-          "type": "boolean",
-          "default": true
-        },
-        "note": {
-          "type": "string"
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["type", "target", "expected"],
+          "properties": {
+            "type": {
+              "const": "locator_count"
+            },
+            "target": {
+              "type": "string"
+            },
+            "expected": {
+              "type": "number"
+            },
+            "required": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         }
-      }
+      ]
     },
     "aiAssertion": {
       "type": "object",
