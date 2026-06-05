@@ -378,3 +378,7 @@ Migrate real modules gradually. Start with one readonly module, then one control
 - Feishu receives result writeback without modifying business case fields.
 - A failed case includes enough evidence for development triage without asking QA for missing reproduction details.
 - The framework can run without Feishu by using an existing local snapshot.
+
+## Implementation Status
+
+The first implementation slice covers local and Feishu case ingestion interfaces, immutable snapshots, filters, safety gates, data profiles, Playwright execution, Midscene assertion boundaries, evidence collection, summaries, and Feishu result writeback payloads. Real business module migration is intentionally separate from the framework foundation.
