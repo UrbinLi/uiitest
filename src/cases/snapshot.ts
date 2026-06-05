@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import type { CaseSnapshot, StandardCase } from "./types.js";
 
-const RUN_ID_PATTERN = /^\d{8}-\d{6}$/;
+const RUN_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 export function createRunId(now = new Date()): string {
   const year = now.getUTCFullYear();

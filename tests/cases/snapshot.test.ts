@@ -76,11 +76,30 @@ describe("case snapshots", () => {
     assert.equal(createRunId(new Date("2026-06-04T04:05:06Z")), "20260604-040506");
   });
 
+  it("accepts safe named run IDs", async () => {
+    const rootDir = await mkdtemp(join(tmpdir(), "midscene-snapshot-"));
+
+    try {
+      const snapshotPath = await writeSnapshot({
+        rootDir,
+        runId: "plan-check",
+        source: "local",
+        sourceRef: "cases/examples/content-readonly.case.json",
+        filters: {},
+        cases: [completeCase],
+      });
+
+      assert.equal(snapshotPath, join(rootDir, "cases", "snapshots", "plan-check", "cases.json"));
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   it("rejects invalid run IDs before writing snapshots", async () => {
     const rootDir = await mkdtemp(join(tmpdir(), "midscene-snapshot-"));
 
     try {
-      for (const runId of ["../escaped", "", "2026-06-04T04:05:06Z"]) {
+      for (const runId of ["../escaped", "foo/bar", ".", "..", "", "2026-06-04T04:05:06Z"]) {
         await assert.rejects(
           writeSnapshot({
             rootDir,
