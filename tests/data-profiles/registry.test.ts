@@ -27,6 +27,12 @@ describe("data profile registry", () => {
     );
   });
 
+  it("throws for inherited object property names", () => {
+    for (const name of ["__proto__", "toString", "constructor"]) {
+      assert.throws(() => getDataProfile(name), /Unknown data profile/);
+    }
+  });
+
   it("includes run and case markers for controlled-write-small setup and cleanup", async () => {
     const profile = getDataProfile("controlled-write-small");
     const context = { runId: "run-42", caseId: "case-7" };
