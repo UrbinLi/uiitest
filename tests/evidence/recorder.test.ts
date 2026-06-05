@@ -3,6 +3,7 @@ import { mkdtemp, readFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
+import type { Page } from "@playwright/test";
 
 import { createEvidenceRecorder } from "../../src/evidence/recorder.js";
 
@@ -30,8 +31,26 @@ describe("evidence recorder", () => {
     const pageErrors = await readFile(join(recorder.caseEvidenceDir, "page-errors.log"), "utf8");
 
     assert.match(steps, /Open content page/);
-    assert.match(steps, /"name":"finish"/);
+    assert.match(steps, /"name":"finish evidence recording"/);
     assert.match(consoleErrors, /Cannot read property 'map'/);
     assert.match(pageErrors, /Page crashed/);
+  });
+
+  it("captures full-page screenshots", async () => {
+    const evidenceRoot = await mkdtemp(join(tmpdir(), "midscene-evidence-"));
+    const caseId = "CONTENT-READ-001";
+    const recorder = await createEvidenceRecorder({ evidenceRoot, caseId });
+    const screenshotCalls: unknown[] = [];
+    const page = {
+      async screenshot(options: unknown) {
+        screenshotCalls.push(options);
+        return Buffer.from("");
+      },
+    } as unknown as Page;
+
+    const screenshotPath = await recorder.screenshot(page, "content-page");
+
+    assert.equal(screenshotPath, join(recorder.caseEvidenceDir, "content-page.png"));
+    assert.deepEqual(screenshotCalls, [{ path: screenshotPath, fullPage: true }]);
   });
 });

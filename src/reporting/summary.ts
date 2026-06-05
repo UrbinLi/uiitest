@@ -41,10 +41,7 @@ export async function writeRunSummary(input: RunSummaryInput): Promise<{
 export async function updateWritebackStatus(
   reportDir: string,
   status: WritebackStatus,
-): Promise<{
-  jsonPath: string;
-  markdownPath: string;
-}> {
+): Promise<void> {
   const jsonPath = join(reportDir, "summary.json");
   const markdownPath = join(reportDir, "summary.md");
   const summary = JSON.parse(await readFile(jsonPath, "utf8")) as RunSummary;
@@ -53,8 +50,6 @@ export async function updateWritebackStatus(
   summary.counts = countResults(summary.results);
 
   await writeSummaryFiles(summary, jsonPath, markdownPath);
-
-  return { jsonPath, markdownPath };
 }
 
 function buildRunSummary(input: RunSummaryInput): RunSummary {
@@ -94,23 +89,18 @@ function countResults(results: CaseResult[]): Record<CaseStatus, number> {
 
 function renderMarkdown(summary: RunSummary): string {
   const lines = [
-    "# Run Summary",
+    "# UI Automation Run Summary",
     "",
     `- Run ID: ${summary.runId}`,
-    `- Started at: ${summary.startedAt}`,
-    `- Finished at: ${summary.finishedAt}`,
-    `- Feishu writeback status: ${summary.writebackStatus}`,
+    `- Passed: ${summary.counts.passed}`,
+    `- Failed: ${summary.counts.failed}`,
+    `- Blocked: ${summary.counts.blocked}`,
+    `- Skipped: ${summary.counts.skipped}`,
+    `- Partial: ${summary.counts.partial}`,
+    `- Feishu writeback: ${summary.writebackStatus}`,
     "",
-    "## Counts",
-    "",
-    "| Status | Count |",
-    "| --- | ---: |",
-    ...CASE_STATUSES.map((status) => `| ${status} | ${summary.counts[status]} |`),
-    "",
-    "## Case Results",
-    "",
-    "| Case ID | Feishu Record | Module | Title | Status | Duration (ms) | Failure | Evidence |",
-    "| --- | --- | --- | --- | --- | ---: | --- | --- |",
+    "| Case ID | Module | Status | Evidence | Failure |",
+    "| --- | --- | --- | --- | --- |",
     ...summary.results.map(renderResultRow),
     "",
   ];
@@ -121,13 +111,10 @@ function renderMarkdown(summary: RunSummary): string {
 function renderResultRow(result: CaseResult): string {
   return [
     result.caseId,
-    result.feishuRecordId ?? "",
     result.module,
-    result.title,
     result.status,
-    String(result.durationMs),
-    result.failure ?? "",
     result.evidenceDir,
+    result.failure ?? "",
   ]
     .map(escapeTableCell)
     .join(" | ")

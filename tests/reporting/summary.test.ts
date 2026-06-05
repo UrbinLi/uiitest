@@ -22,7 +22,7 @@ function buildResult(overrides: Partial<CaseResult> = {}): CaseResult {
 }
 
 describe("run summary reporting", () => {
-  it("writes JSON and Markdown summaries with counts and case results", async () => {
+  it("writes JSON and Markdown summaries with spec-shaped counts and case results", async () => {
     const reportDir = await mkdtemp(join(tmpdir(), "midscene-summary-"));
 
     const paths = await writeRunSummary({
@@ -31,16 +31,26 @@ describe("run summary reporting", () => {
       startedAt: "2026-06-05T10:00:00.000Z",
       finishedAt: "2026-06-05T10:00:02.000Z",
       results: [buildResult()],
-      writebackStatus: "pending",
+      writebackStatus: "disabled",
     });
 
     const summary = JSON.parse(await readFile(paths.jsonPath, "utf8"));
     const markdown = await readFile(paths.markdownPath, "utf8");
 
     assert.equal(summary.counts.passed, 1);
-    assert.match(markdown, /\| passed \| 1 \|/);
-    assert.match(markdown, /\| failed \| 0 \|/);
-    assert.match(markdown, /CONTENT-READ-001/);
+    assert.match(markdown, /^# UI Automation Run Summary$/m);
+    assert.match(markdown, /^- Run ID: run-2026-06-05$/m);
+    assert.match(markdown, /^- Passed: 1$/m);
+    assert.match(markdown, /^- Failed: 0$/m);
+    assert.match(markdown, /^- Blocked: 0$/m);
+    assert.match(markdown, /^- Skipped: 0$/m);
+    assert.match(markdown, /^- Partial: 0$/m);
+    assert.match(markdown, /^- Feishu writeback: disabled$/m);
+    assert.match(markdown, /^\| Case ID \| Module \| Status \| Evidence \| Failure \|$/m);
+    assert.match(
+      markdown,
+      /^\| CONTENT-READ-001 \| content-management \| passed \| \/tmp\/evidence\/CONTENT-READ-001 \|  \|$/m,
+    );
   });
 
   it("escapes pipe characters in failure text in Markdown result tables", async () => {
@@ -62,7 +72,10 @@ describe("run summary reporting", () => {
 
     const markdown = await readFile(markdownPath, "utf8");
 
-    assert.match(markdown, /Expected A \\| B to be visible/);
+    assert.match(
+      markdown,
+      /^\| CONTENT-READ-001 \| content-management \| failed \| \/tmp\/evidence\/CONTENT-READ-001 \| Expected A \\\| B to be visible \|$/m,
+    );
   });
 
   it("updates JSON and Markdown Feishu writeback status", async () => {
@@ -77,12 +90,13 @@ describe("run summary reporting", () => {
       writebackStatus: "pending",
     });
 
-    await updateWritebackStatus(reportDir, "passed");
+    const result = await updateWritebackStatus(reportDir, "passed");
 
     const summary = JSON.parse(await readFile(join(reportDir, "summary.json"), "utf8"));
     const markdown = await readFile(join(reportDir, "summary.md"), "utf8");
 
+    assert.equal(result, undefined);
     assert.equal(summary.writebackStatus, "passed");
-    assert.match(markdown, /Feishu writeback status: passed/);
+    assert.match(markdown, /^- Feishu writeback: passed$/m);
   });
 });

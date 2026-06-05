@@ -59,12 +59,12 @@ export async function createEvidenceRecorder({
     async screenshot(page, name) {
       const screenshotPath = join(caseEvidenceDir, `${name}.png`);
 
-      await page.screenshot({ path: screenshotPath });
+      await page.screenshot({ path: screenshotPath, fullPage: true });
 
       return screenshotPath;
     },
     async finish(status = "passed", detail) {
-      await appendStep("finish", status, detail);
+      await appendStep("finish evidence recording", status, detail);
     },
   };
 }
