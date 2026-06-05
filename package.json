@@ -7,6 +7,7 @@
     "qa:smoke": "bash qa/run-web-qa.sh smoke",
     "qa:ai": "bash qa/run-web-qa.sh ai",
     "qa:ai:codex": "bash qa/run-web-qa.sh ai-codex",
+    "qa:framework": "bash qa/run-framework-qa.sh",
     "test:unit": "tsx --test tests/**/*.test.ts",
     "test:list": "playwright test --list",
     "typecheck": "tsc --noEmit"
