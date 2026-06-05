@@ -1,0 +1,60 @@
+[
+  {
+    "case_id": "CONTENT-READ-001",
+    "module": "content-management",
+    "feature": "EaseNest",
+    "title": "Verify readonly content details can be opened",
+    "priority": "P2",
+    "enabled": true,
+    "safety_level": "readonly",
+    "cleanup_policy": "none",
+    "env_scope": ["staging"],
+    "tags": ["content-management", "EaseNest", "readonly"],
+    "data_profile": "seeded-content",
+    "owner": "qa",
+    "preconditions": [
+      "Tester is signed in with readonly access.",
+      "At least one published EaseNest content item exists."
+    ],
+    "steps": [
+      {
+        "step_id": "open-content-management",
+        "type": "goto",
+        "description": "Open the content management page.",
+        "target": "/content-management",
+        "hard_assertions": [
+          {
+            "type": "url_contains",
+            "expected": "/content-management"
+          },
+          {
+            "type": "text_visible",
+            "expected": "EaseNest"
+          }
+        ],
+        "ai_assertions": [
+          {
+            "prompt": "Confirm the page shows the EaseNest content management list."
+          }
+        ]
+      },
+      {
+        "step_id": "open-first-content-detail",
+        "type": "click",
+        "description": "Open the first EaseNest content item without editing it.",
+        "target": "text=EaseNest",
+        "hard_assertions": [
+          {
+            "type": "locator_visible",
+            "locator": "text=EaseNest"
+          }
+        ],
+        "ai_assertions": [
+          {
+            "prompt": "Confirm the detail view is readable and no save or delete action is triggered."
+          }
+        ]
+      }
+    ]
+  }
+]
