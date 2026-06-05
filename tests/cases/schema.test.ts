@@ -78,4 +78,32 @@ describe("case schema", () => {
       validation.errors.join("; "),
     );
   });
+
+  it("rejects url_contains hard assertions with empty expected values", () => {
+    const validation = validateCaseRecord({
+      ...readonlyCase,
+      hard_assertions: [
+        {
+          type: "url_contains",
+          expected: "",
+        },
+      ],
+    });
+
+    assert.equal(validation.valid, false);
+  });
+
+  it("rejects locator_visible hard assertions with whitespace-only targets", () => {
+    const validation = validateCaseRecord({
+      ...readonlyCase,
+      hard_assertions: [
+        {
+          type: "locator_visible",
+          target: "   ",
+        },
+      ],
+    });
+
+    assert.equal(validation.valid, false);
+  });
 });

@@ -167,7 +167,9 @@
               "const": "url_contains"
             },
             "expected": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
             },
             "required": {
               "type": "boolean",
@@ -184,7 +186,9 @@
               "const": "text_visible"
             },
             "expected": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
             },
             "required": {
               "type": "boolean",
@@ -201,7 +205,9 @@
               "const": "locator_visible"
             },
             "target": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
             },
             "required": {
               "type": "boolean",
@@ -218,7 +224,9 @@
               "const": "locator_count"
             },
             "target": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
             },
             "expected": {
               "type": "number"

@@ -169,13 +169,13 @@ function validateHardAssertion(
     switch (assertionType) {
       case "url_contains":
       case "text_visible":
-        validateStringProperty(assertion, "expected", path, errors);
+        validateNonEmptyStringProperty(assertion, "expected", path, errors);
         break;
       case "locator_visible":
-        validateStringProperty(assertion, "target", path, errors);
+        validateNonEmptyStringProperty(assertion, "target", path, errors);
         break;
       case "locator_count":
-        validateStringProperty(assertion, "target", path, errors);
+        validateNonEmptyStringProperty(assertion, "target", path, errors);
         validateNumberProperty(assertion, "expected", path, errors);
         break;
     }
@@ -323,14 +323,15 @@ function validateStringArray(
   }
 }
 
-function validateStringProperty(
+function validateNonEmptyStringProperty(
   record: UnknownRecord,
   key: string,
   path: string,
   errors: string[],
 ): void {
-  if (typeof getValue(record, key, key) !== "string") {
-    errors.push(`${path}.${key} must be a string`);
+  const value = getValue(record, key, key);
+  if (typeof value !== "string" || value.trim().length === 0) {
+    errors.push(`${path}.${key} must be a non-empty string`);
   }
 }
 
