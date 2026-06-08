@@ -10,3 +10,5 @@ qa/evidence/*
 !qa/evidence/.gitkeep
 qa/reports/*
 !qa/reports/.gitkeep
+cases/snapshots/*
+!cases/snapshots/.gitkeep

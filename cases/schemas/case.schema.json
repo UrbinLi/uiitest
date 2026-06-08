@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://allymatic.local/schemas/case.schema.json",
+  "title": "Standard Case File",
+  "description": "Array of standard test case records using snake_case JSON fields.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "$ref": "#/$defs/standardCase"
+  },
+  "$defs": {
+    "standardCase": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "case_id",
+        "module",
+        "feature",
+        "title",
+        "priority",
+        "enabled",
+        "safety_level",
+        "cleanup_policy",
+        "env_scope",
+        "tags",
+        "data_profile",
+        "owner",
+        "preconditions",
+        "hard_assertions",
+        "ai_assertions",
+        "steps"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "type": "string",
+          "minLength": 1
+        },
+        "feature": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["P0", "P1", "P2", "P3"]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "safety_level": {
+          "type": "string",
+          "enum": ["readonly", "controlled-write", "dangerous-write"]
+        },
+        "cleanup_policy": {
+          "type": "string",
+          "enum": ["none", "best-effort", "required"]
+        },
+        "env_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "feishu_record_id": {
+          "type": "string"
+        },
+        "hard_assertions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hardAssertion"
+          }
+        },
+        "ai_assertions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/aiAssertion"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type"],
+      "properties": {
+        "step_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "goto",
+            "click",
+            "fill",
+            "wait_for",
+            "ai_act",
+            "ai_query",
+            "api_check",
+            "manual_note"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "input": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "timeout_ms": {
+          "type": "number"
+        },
+        "metadata": {
+          "type": "object"
+        }
+      }
+    },
+    "hardAssertion": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["type", "expected"],
+          "properties": {
+            "type": {
+              "const": "url_contains"
+            },
+            "expected": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "required": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["type", "expected"],
+          "properties": {
+            "type": {
+              "const": "text_visible"
+            },
+            "expected": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "required": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["type", "target"],
+          "properties": {
+            "type": {
+              "const": "locator_visible"
+            },
+            "target": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "required": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["type", "target", "expected"],
+          "properties": {
+            "type": {
+              "const": "locator_count"
+            },
+            "target": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "expected": {
+              "type": "number"
+            },
+            "required": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      ]
+    },
+    "aiAssertion": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["prompt"],
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

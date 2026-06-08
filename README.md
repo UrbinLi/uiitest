@@ -35,6 +35,38 @@ For test or staging deployments, replace `QA_BASE_URL` with the deployed URL.
 
 The smoke scenario is intentionally strict: browser console or page errors fail the run. The AI scenario evaluates visible usability and records console diagnostics in its summary; a `passed_with_console_errors` result means the semantic check succeeded but the target still has quality findings to investigate.
 
+## Data-Driven Framework
+
+The framework runner reads standardized cases from a local JSON file or Feishu, writes an immutable snapshot under `cases/snapshots/<run-id>/cases.json`, executes selected cases through Playwright and Midscene, stores evidence under `qa/evidence/<run-id>/`, and writes reports under `qa/reports/<run-id>/`.
+
+Run a local snapshot-backed case:
+
+```bash
+QA_BASE_URL="http://127.0.0.1:4174" pnpm qa:framework
+```
+
+Useful filters:
+
+```bash
+QA_MODULE="content-management" QA_TAGS="EaseNest" QA_ENV="test" QA_BASE_URL="http://127.0.0.1:4174" pnpm qa:framework
+```
+
+Controlled writes require an explicit safety level:
+
+```bash
+QA_ALLOWED_SAFETY="controlled-write" QA_BASE_URL="http://127.0.0.1:4174" pnpm qa:framework
+```
+
+Feishu sync requires:
+
+- `QA_CASE_SOURCE_TYPE=feishu`
+- `FEISHU_APP_TOKEN`
+- `FEISHU_TABLE_ID`
+- `FEISHU_BEARER_TOKEN`
+- optional `FEISHU_VIEW_ID`
+
+Feishu result writeback runs only when `QA_FEISHU_WRITEBACK=1`.
+
 ## Evidence
 
 Each run prints a timestamped run ID and writes:

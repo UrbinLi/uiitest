@@ -8,5 +8,5 @@
     "skipLibCheck": true,
     "types": ["node", "@playwright/test"]
   },
-  "include": ["e2e/**/*.ts", "*.ts"]
+  "include": ["e2e/**/*.ts", "src/**/*.ts", "tests/**/*.ts", "*.ts"]
 }

@@ -7,6 +7,8 @@
     "qa:smoke": "bash qa/run-web-qa.sh smoke",
     "qa:ai": "bash qa/run-web-qa.sh ai",
     "qa:ai:codex": "bash qa/run-web-qa.sh ai-codex",
+    "qa:framework": "bash qa/run-framework-qa.sh",
+    "test:unit": "tsx --test tests/**/*.test.ts",
     "test:list": "playwright test --list",
     "typecheck": "tsc --noEmit"
   },
@@ -14,6 +16,7 @@
     "@midscene/web": "1.8.4",
     "@playwright/test": "1.60.0",
     "@types/node": "^22.13.1",
+    "tsx": "^4.22.4",
     "typescript": "~5.7.2"
   },
   "packageManager": "pnpm@10.15.0"
